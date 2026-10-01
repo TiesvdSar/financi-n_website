@@ -1,0 +1,50 @@
+---
+import { url } from '../utils/url';
+
+const links = [
+  { href: url(), label: 'Home' },
+  { href: url('artikelen/'), label: 'Artikelen' },
+  { href: url('over/'), label: 'Over' },
+];
+---
+
+<header>
+  <nav class="container">
+    <a class="logo" href={url()}>€ Financiën</a>
+    <ul>
+      {links.map(({ href, label }) => <li><a href={href}>{label}</a></li>)}
+    </ul>
+  </nav>
+</header>
+
+<style>
+  header {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 64px;
+  }
+  .logo {
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+  }
+  ul {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  ul a:hover { color: var(--color-primary); }
+</style>

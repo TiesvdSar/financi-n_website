@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../utils/url';
+---
+
+<BaseLayout title="Pagina niet gevonden">
+  <h1>404 — Pagina niet gevonden</h1>
+  <p>Deze pagina bestaat niet (meer). <a href={url()}>Terug naar home</a>.</p>
+</BaseLayout>

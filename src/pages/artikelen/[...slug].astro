@@ -1,0 +1,37 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getArticles } from '../../utils/articles';
+import { url, formatDate } from '../../utils/url';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((article) => ({ params: { slug: article.id }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const { title, description, pubDate, updatedDate, category } = article.data;
+const { Content } = await render(article);
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="prose">
+    <a href={url('artikelen/')}>← Alle artikelen</a>
+    <h1>{title}</h1>
+    <p class="muted">
+      {category} · <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+      {updatedDate && <> · bijgewerkt {formatDate(updatedDate)}</>}
+    </p>
+    <Content />
+  </article>
+</BaseLayout>
+
+<style>
+  .prose { max-width: 70ch; padding-top: 32px; }
+  .prose :global(blockquote) {
+    margin: 24px 0;
+    padding: 12px 16px;
+    border-left: 4px solid var(--color-primary);
+    background: var(--color-surface);
+  }
+</style>

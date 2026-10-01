@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { getArticles } from '../../utils/articles';
+
+const articles = await getArticles();
+---
+
+<BaseLayout title="Artikelen" description="Alle artikelen over persoonlijke financiën.">
+  <h1>Artikelen</h1>
+  <div class="list">
+    {articles.map((article) => <ArticleCard article={article} />)}
+  </div>
+</BaseLayout>
+
+<style>
+  .list { display: grid; gap: 16px; }
+</style>

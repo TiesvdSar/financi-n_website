@@ -1,0 +1,31 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { url, formatDate } from '../utils/url';
+
+interface Props {
+  article: CollectionEntry<'artikelen'>;
+}
+
+const { article } = Astro.props;
+const { title, description, pubDate, category } = article.data;
+---
+
+<article class="card">
+  <p class="meta muted">{category} · <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
+  <h3><a href={url(`artikelen/${article.id}/`)}>{title}</a></h3>
+  <p>{description}</p>
+</article>
+
+<style>
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .meta { margin: 0; font-size: 0.85rem; }
+  h3 { margin: 4px 0 8px; }
+  h3 a { color: var(--color-text); text-decoration: none; }
+  h3 a:hover { color: var(--color-primary); }
+  p:last-child { margin-bottom: 0; }
+</style>
