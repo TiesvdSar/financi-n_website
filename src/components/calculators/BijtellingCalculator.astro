@@ -1,0 +1,215 @@
+---
+/** Interactieve calculator voor de bijtelling van een auto van de zaak. Rekenlogica: src/lib/bijtelling.ts */
+import InfoKnop from './InfoKnop.astro';
+import '../../styles/calculator.css';
+---
+
+<section class="calc" id="calculator" data-bijtelling-calc aria-labelledby="bt-titel">
+  <h2 id="bt-titel">Bereken je bijtelling</h2>
+  <p class="muted intro">Volgens de regels van 2026. Het veld onder <em>Extra opties</em> is niet verplicht.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <div class="label-rij">
+          <label for="bt-waarde">Cataloguswaarde auto</label>
+          <InfoKnop id="bt-waarde-info" label="Info over cataloguswaarde">
+            <p class="info-titel">Wat is de cataloguswaarde?</p>
+            <p>De officiële nieuwprijs van de auto, inclusief btw en bpm en inclusief fabrieksopties. Niet wat de leasemaatschappij of je werkgever er echt voor heeft betaald, en ook niet de huidige waarde.</p>
+            <p>Je vindt hem bij het RDW (opentdata.rdw.nl) of in je leasecontract.</p>
+          </InfoKnop>
+        </div>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="bt-waarde" name="waarde" inputmode="decimal" value="45.000" aria-describedby="bt-waarde-fout" /></div>
+        <p class="fout" id="bt-waarde-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="bt-aandrijving">Soort auto</label>
+        <select id="bt-aandrijving" name="aandrijving">
+          <option value="elektrisch">Volledig elektrisch</option>
+          <option value="brandstof">Benzine, diesel of (plug-in) hybride</option>
+          <option value="waterstof">Waterstof of zonnecelauto</option>
+        </select>
+      </div>
+
+      <div class="veld">
+        <div class="label-rij">
+          <label for="bt-jaar">Jaar eerste toelating</label>
+          <InfoKnop id="bt-jaar-info" label="Info over jaar eerste toelating">
+            <p class="info-titel">Waarom maakt het jaar uit?</p>
+            <p>Het bijtellingspercentage ligt vast op het moment dat de auto voor het eerst op kenteken komt, en blijft 60 maanden gelijk. Een elektrische auto uit 2024 houdt dus 16%, ook als je hem nu pas gaat rijden.</p>
+            <table>
+              <tbody>
+                <tr><td>Elektrisch 2022</td><td>16% tot € 35.000</td></tr>
+                <tr><td>Elektrisch 2023–2024</td><td>16% tot € 30.000</td></tr>
+                <tr><td>Elektrisch 2025</td><td>17% tot € 30.000</td></tr>
+                <tr><td>Elektrisch 2026</td><td>18% tot € 30.000</td></tr>
+                <tr><td>Elektrisch 2027</td><td>20% tot € 30.000</td></tr>
+                <tr><td>Elektrisch vanaf 2028</td><td>22%</td></tr>
+                <tr class="totaal"><td>Overige auto's</td><td>22%</td></tr>
+              </tbody>
+            </table>
+            <p>Boven de grens geldt 22%. Voor waterstof- en zonnecelauto's geldt het lage percentage over de hele waarde.</p>
+          </InfoKnop>
+        </div>
+        <select id="bt-jaar" name="jaar">
+          <option value="2027">2027</option>
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+        </select>
+      </div>
+
+      <div class="veld">
+        <label for="bt-salaris">Bruto jaarsalaris</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="bt-salaris" name="salaris" inputmode="decimal" value="50.000" aria-describedby="bt-salaris-hint bt-salaris-fout" /></div>
+        <p class="hint" id="bt-salaris-hint">Zonder de bijtelling, inclusief vakantiegeld.</p>
+        <p class="fout" id="bt-salaris-fout"></p>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Extra opties <span class="muted">(niet verplicht)</span></legend>
+      <div class="velden">
+        <div class="veld">
+          <label for="bt-bijdrage">Eigen bijdrage per maand</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="bt-bijdrage" name="bijdrage" inputmode="decimal" placeholder="0" aria-describedby="bt-bijdrage-hint bt-bijdrage-fout" /></div>
+          <p class="hint" id="bt-bijdrage-hint">Wat je zelf aan je werkgever betaalt voor privégebruik. Dit gaat af van de bijtelling.</p>
+          <p class="fout" id="bt-bijdrage-fout"></p>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel hoofd"><p class="tegel-label">Netto kosten per maand</p><p class="tegel-waarde" data-out="netto"></p><p class="tegel-sub" data-out="netto-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Bijtelling per jaar</p><p class="tegel-waarde" data-out="bijtelling"></p><p class="tegel-sub" data-out="bijtelling-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Effectief belastingtarief</p><p class="tegel-waarde" data-out="tarief"></p><p class="tegel-sub">Over de bijtelling, inclusief minder heffingskorting.</p></div>
+      <div class="tegel" data-vergelijk hidden><p class="tegel-label">Dezelfde auto met 22% bijtelling</p><p class="tegel-waarde" data-out="vergelijk"></p><p class="tegel-sub" data-out="vergelijk-sub"></p></div>
+    </div>
+
+    <details class="opbouw" open>
+      <summary>Zo is je bijtelling berekend</summary>
+      <table>
+        <tbody data-out="opbouw"></tbody>
+      </table>
+    </details>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>Tarieven en heffingskortingen van 2026, voor iemand onder de AOW-leeftijd met loon uit dienstbetrekking.</li>
+        <li>De bijtelling verhoogt je belastbaar inkomen. Daardoor betaal je meer belasting en krijg je minder algemene heffingskorting en arbeidskorting. Beide zijn meegenomen.</li>
+        <li>Rijd je aantoonbaar minder dan 500 km per jaar privé (met een sluitende rittenregistratie), dan hoef je niets bij te tellen.</li>
+        <li>Een eventueel lager inkomensafhankelijk recht op toeslagen door de hogere bijtelling is niet meegenomen.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { parseGetal } from '../../lib/getal';
+  import { berekenBijtelling, type Aandrijving, type BijtellingInvoer, type BijtellingResultaat } from '../../lib/bijtelling';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const euroCent = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (n: number) => `${(n * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 })}%`;
+
+  const REGELS = [
+    { naam: 'waarde', verplicht: true, min: 1000, max: 1000000, melding: 'Vul een cataloguswaarde in tussen € 1.000 en € 1.000.000.' },
+    { naam: 'salaris', verplicht: true, min: 0, max: 10000000, melding: 'Vul een salaris in van € 0 of meer.' },
+    { naam: 'bijdrage', verplicht: false, min: 0, max: 10000, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const kiezer = (naam: string) => form.elements.namedItem(naam) as HTMLSelectElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+    const vergelijkTegel = root.querySelector<HTMLElement>('[data-vergelijk]')!;
+
+    function leesInvoer(): BijtellingInvoer | null {
+      const waarden: Record<string, number | undefined> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#bt-${regel.naam}-fout`)!;
+        const tekst = input.value.trim();
+        let ok = true;
+        let waarde: number | undefined;
+        if (tekst === '') {
+          ok = !regel.verplicht;
+        } else {
+          waarde = parseGetal(tekst);
+          ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max;
+        }
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      if (!geldig) return null;
+      return {
+        cataloguswaarde: waarden.waarde!,
+        aandrijving: kiezer('aandrijving').value as Aandrijving,
+        jaarEersteToelating: Number(kiezer('jaar').value),
+        brutoJaarsalaris: waarden.salaris!,
+        eigenBijdragePerMaand: waarden.bijdrage,
+      };
+    }
+
+    function rij(label: string, waarde: string, klasse?: string) {
+      const tr = document.createElement('tr');
+      if (klasse) tr.className = klasse;
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = label;
+      const td = document.createElement('td');
+      td.textContent = waarde;
+      tr.append(th, td);
+      return tr;
+    }
+
+    function toonResultaat(invoer: BijtellingInvoer, r: BijtellingResultaat) {
+      out('netto').textContent = euroCent.format(r.nettoKostenPerMaand);
+      out('netto-sub').textContent =
+        r.eigenBijdragePerJaar > 0
+          ? `${euroCent.format(r.extraBelastingPerMaand)} extra belasting + ${euroCent.format(r.eigenBijdragePerJaar / 12)} eigen bijdrage.`
+          : 'Zoveel gaat er elke maand extra van je nettoloon af.';
+      out('bijtelling').textContent = euro.format(r.bijtellingPerJaar);
+      out('bijtelling-sub').textContent = `${euro.format(r.bijtellingPerJaar / 12)} per maand bij je brutoloon opgeteld.`;
+      out('tarief').textContent = pct(r.effectiefTarief);
+
+      const verschil = r.nettoKostenStandaardPerMaand - r.nettoKostenPerMaand;
+      vergelijkTegel.hidden = verschil < 0.005;
+      if (verschil >= 0.005) {
+        out('vergelijk').textContent = euroCent.format(r.nettoKostenStandaardPerMaand);
+        out('vergelijk-sub').textContent = `Je bespaart ${euroCent.format(verschil)} per maand door het lagere percentage.`;
+      }
+
+      const regels = r.delen.map((d) => rij(`${pct(d.percentage)} over ${euro.format(d.over)}`, euro.format(d.bedrag)));
+      if (r.eigenBijdragePerJaar > 0) regels.push(rij('Eigen bijdrage per jaar', `− ${euro.format(Math.min(r.eigenBijdragePerJaar, r.bijtellingVoorEigenBijdrage))}`, 'min'));
+      regels.push(rij('Bijtelling per jaar', euro.format(r.bijtellingPerJaar), 'totaal'));
+      regels.push(rij(`Extra belasting (${pct(r.effectiefTarief)} van de bijtelling)`, euro.format(r.extraBelastingPerJaar)));
+      out('opbouw').replaceChildren(...regels);
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+      toonResultaat(invoer, berekenBijtelling(invoer));
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('change', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-bijtelling-calc]').forEach(init);
+</script>

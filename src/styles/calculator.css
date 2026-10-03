@@ -1,0 +1,215 @@
+/* Gedeelde opmaak voor alle calculators. Alles valt onder .calc, zodat de rest van de site niet geraakt wordt. */
+
+.calc {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --waarschuwing-bg: #fff7e6;
+  --waarschuwing-rand: #c98500;
+  --fout: #b42318;
+  margin: 32px 0;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+@media (prefers-color-scheme: dark) {
+  .calc {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --waarschuwing-bg: #2a2110;
+    --fout: #f97066;
+  }
+}
+.calc h2 { margin-top: 0; }
+.calc .intro { margin-top: -8px; }
+
+/* Invoer */
+.calc .velden {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.calc .veld label,
+.calc .label-rij { font-weight: 600; font-size: 0.95rem; }
+.calc .label-rij { display: flex; align-items: center; gap: 6px; }
+.calc .invoer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+.calc .invoer:focus-within { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.calc .invoer span { color: var(--color-muted); }
+.calc .invoer input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  outline: none;
+}
+.calc .invoer:has(input[aria-invalid='true']) { border-color: var(--fout); }
+.calc select {
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+}
+.calc .hint { margin: 4px 0 0; font-size: 0.8rem; color: var(--color-muted); }
+.calc .fout { margin: 4px 0 0; font-size: 0.8rem; color: var(--fout); }
+.calc .fout:empty { display: none; }
+.calc .check { display: flex; align-items: center; gap: 8px; }
+.calc .extra {
+  margin: 20px 0 0;
+  padding: 12px 16px 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+.calc .extra legend { padding: 0 6px; font-weight: 600; }
+
+/* Info-knop */
+.calc .info-wrap { position: relative; display: inline-flex; }
+.calc .info {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--color-muted);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-muted);
+  font: italic 600 0.75rem/1 Georgia, serif;
+  cursor: help;
+}
+.calc .info:hover,
+.calc .info:focus-visible { border-color: var(--color-primary); color: var(--color-primary); }
+.calc .info-paneel {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  left: -12px;
+  width: min(320px, 80vw);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+.calc .info-wrap:hover .info-paneel,
+.calc .info-wrap:focus-within .info-paneel,
+.calc .info-wrap.open .info-paneel { display: block; }
+.calc .info-titel { margin: 0 0 6px; font-weight: 600; font-size: 0.85rem; }
+.calc .info-paneel table { display: table; width: 100%; margin: 0; border-collapse: collapse; }
+.calc .info-paneel td { padding: 2px 0; border: 0; white-space: normal; }
+.calc .info-paneel td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.calc .info-paneel .totaal td { border-top: 1px solid var(--color-border); font-weight: 600; padding-top: 4px; }
+.calc .info-paneel p { margin: 8px 0 0; color: var(--color-muted); }
+.calc .info-paneel .info-titel { margin-top: 0; color: var(--color-text); }
+
+/* Resultaat */
+.calc .resultaat { margin-top: 24px; transition: opacity 0.2s; }
+.calc .resultaat.verouderd { opacity: 0.45; }
+.calc .tegels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.calc .tegel {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+.calc .tegel.hoofd { border-color: var(--color-primary); }
+.calc .tegel p { margin: 0; }
+.calc .tegel-label { font-size: 0.8rem; color: var(--color-muted); }
+.calc .tegel-waarde { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.calc .tegel-sub { font-size: 0.8rem; color: var(--color-muted); }
+.calc .waarschuwing {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--waarschuwing-rand);
+  border-radius: 4px;
+  background: var(--waarschuwing-bg);
+}
+.calc .opbouw { margin: 16px 0 0; }
+.calc .opbouw table { display: table; width: 100%; margin: 0; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.calc .opbouw th,
+.calc .opbouw td { padding: 6px 0; border: 0; border-bottom: 1px solid var(--color-border); white-space: normal; }
+.calc .opbouw th { text-align: left; font-weight: 400; }
+.calc .opbouw td { text-align: right; white-space: nowrap; padding-left: 12px; }
+.calc .opbouw .min td { color: var(--fout); }
+.calc .opbouw .totaal th,
+.calc .opbouw .totaal td { font-weight: 700; border-bottom: 0; }
+
+/* Grafiek */
+.calc .grafiek { margin: 24px 0 0; }
+.calc figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.calc .grafiek-titel { font-weight: 600; }
+.calc .legenda { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.85rem; color: var(--color-muted); }
+.calc .legenda-item { display: inline-flex; align-items: center; gap: 6px; }
+.calc .legenda-item[hidden] { display: none; }
+.calc .grafiek-vlak { position: relative; }
+.calc .plot { display: block; width: 100%; overflow: visible; touch-action: pan-y; }
+.calc .plot:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; border-radius: 4px; }
+.calc .lijn { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.calc .lijn-1 { stroke: var(--series-1); }
+.calc .lijn-2 { stroke: var(--series-2); }
+.calc .stippel { stroke-dasharray: 6 4; }
+.calc .raster { stroke: var(--color-border); stroke-width: 1; }
+.calc .basislijn { stroke: var(--color-muted); stroke-width: 1; }
+.calc .band { fill: var(--color-bg); }
+.calc .as-tekst { fill: var(--color-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.calc .kruis { stroke: var(--color-muted); stroke-width: 1; }
+.calc .punt { stroke: var(--color-surface); stroke-width: 2; }
+.calc .punt-1 { fill: var(--series-1); }
+.calc .punt-2 { fill: var(--series-2); }
+.calc .tooltip {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.calc .tt-kop { margin: 0 0 4px; color: var(--color-muted); }
+.calc .tt-rij { display: flex; align-items: center; gap: 6px; }
+.calc .tt-rij strong { font-variant-numeric: tabular-nums; }
+.calc .tt-rij span:last-child { color: var(--color-muted); }
+.calc .tt-sleutel { display: inline-block; width: 12px; height: 2px; }
+.calc .sleutel-1 { background: var(--series-1); }
+.calc .sleutel-2 { background: var(--series-2); }
+
+/* Tabel en aannames */
+.calc details { margin-top: 16px; }
+.calc summary { cursor: pointer; color: var(--color-primary); }
+.calc .tabel-scroll { overflow-x: auto; margin-top: 8px; }
+.calc .tabel table { display: table; width: 100%; margin: 0; border-collapse: collapse; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.calc .tabel th,
+.calc .tabel td { padding: 6px 10px; border-bottom: 1px solid var(--color-border); text-align: right; white-space: nowrap; }
+.calc .tabel th:first-child,
+.calc .tabel td:first-child { text-align: left; }
+.calc .aannames ul { margin: 8px 0 0; padding-left: 20px; font-size: 0.9rem; color: var(--color-muted); }
+.calc .tabel .tekst { text-align: left; }
+.calc .markering { stroke: var(--color-primary); stroke-width: 1; stroke-dasharray: 3 3; }
+.calc .markering-tekst { fill: var(--color-primary); font-weight: 600; }
+.calc .tabel.compact { margin-top: 16px; }
+.calc .tabel.compact th,
+.calc .tabel.compact td { padding: 6px 8px; }
+.calc .tabel.compact tbody th { white-space: normal; font-weight: 400; }

@@ -46,3 +46,11 @@ a { color: var(--color-primary); }
 }
 
 .muted { color: var(--color-muted); }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Ruimte boven een ankerdoel, zodat het niet achter de vaste kopregel verdwijnt. */
+[id] { scroll-margin-top: 80px; }

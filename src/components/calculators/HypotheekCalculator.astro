@@ -1,0 +1,358 @@
+---
+/** Interactieve calculator voor de maximale hypotheek en de maandlasten. Rekenlogica: src/lib/hypotheek.ts */
+import InfoKnop from './InfoKnop.astro';
+import { ENERGIELABELS } from '../../lib/hypotheek';
+import '../../styles/calculator.css';
+---
+
+<section class="calc" id="calculator" data-hypotheek-calc aria-labelledby="hc-titel">
+  <h2 id="hc-titel">Hoeveel kun je lenen, en wat kost dat per maand?</h2>
+  <p class="muted intro">Volgens de leennormen van 2026. De velden onder <em>Extra opties</em> zijn niet verplicht.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <label for="hc-inkomen">Jouw bruto jaarinkomen</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="hc-inkomen" name="inkomen" inputmode="decimal" value="50.000" aria-describedby="hc-inkomen-hint hc-inkomen-fout" /></div>
+        <p class="hint" id="hc-inkomen-hint">Inclusief vakantiegeld en eventuele vaste 13e maand.</p>
+        <p class="fout" id="hc-inkomen-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label class="check"><input type="checkbox" name="partner" /> Ik koop samen met een partner</label>
+        <div class="partner-veld" hidden>
+          <label for="hc-partnerinkomen">Bruto jaarinkomen partner</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="hc-partnerinkomen" name="partnerinkomen" inputmode="decimal" placeholder="0" aria-describedby="hc-partnerinkomen-fout" /></div>
+          <p class="fout" id="hc-partnerinkomen-fout"></p>
+        </div>
+      </div>
+
+      <div class="veld">
+        <label for="hc-rente">Hypotheekrente</label>
+        <div class="invoer"><input id="hc-rente" name="rente" inputmode="decimal" value="3,9" aria-describedby="hc-rente-hint hc-rente-fout" /><span aria-hidden="true">%</span></div>
+        <p class="hint" id="hc-rente-hint">De rente die je bank je biedt.</p>
+        <p class="fout" id="hc-rente-fout"></p>
+      </div>
+
+      <div class="veld">
+        <div class="label-rij">
+          <label for="hc-rentevast">Rentevaste periode</label>
+          <InfoKnop id="hc-rentevast-info" label="Info over rentevaste periode en toetsrente">
+            <p class="info-titel">Waarom maakt dit uit?</p>
+            <p>Zet je de rente korter dan 10 jaar vast, dan moet de bank rekenen met minimaal de toetsrente van de AFM. Die is in 2026 5%. Zo houdt de berekening rekening met een mogelijke rentestijging, en kun je dus minder lenen.</p>
+            <p>Bij 10 jaar of langer vast rekent de bank met je werkelijke rente.</p>
+          </InfoKnop>
+        </div>
+        <select id="hc-rentevast" name="rentevast">
+          <option value="5">5 jaar</option>
+          <option value="10" selected>10 jaar</option>
+          <option value="15">15 jaar</option>
+          <option value="20">20 jaar</option>
+          <option value="30">30 jaar</option>
+        </select>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Extra opties <span class="muted">(niet verplicht)</span></legend>
+      <div class="velden">
+        <div class="veld">
+          <div class="label-rij">
+            <label for="hc-studieschuld">Studieschuld</label>
+            <InfoKnop id="hc-studie-info" label="Info over studieschuld en hypotheek">
+              <p class="info-titel">Zo telt je studieschuld mee</p>
+              <p>De bank kijkt naar het maandbedrag dat bij je huidige schuld, rente en resterende looptijd hoort. Ook als je nu minder betaalt omdat je inkomen laag is, of nog in de aanloopfase zit.</p>
+              <p>Dat maandbedrag wordt vermenigvuldigd met een factor van 1,05 tot 1,40, afhankelijk van de hypotheekrente. Dat bedrag gaat af van wat je per maand aan hypotheek mag betalen.</p>
+              <p>Bron: Nibud, Advies hypotheeknormen 2026.</p>
+            </InfoKnop>
+          </div>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="hc-studieschuld" name="studieschuld" inputmode="decimal" placeholder="0" aria-describedby="hc-studieschuld-hint hc-studieschuld-fout" /></div>
+          <p class="hint" id="hc-studieschuld-hint">Je huidige restschuld, van jou en eventueel je partner samen.</p>
+          <p class="fout" id="hc-studieschuld-fout"></p>
+        </div>
+
+        <div class="veld studie-veld">
+          <label for="hc-studierente">Rente studieschuld</label>
+          <div class="invoer"><input id="hc-studierente" name="studierente" inputmode="decimal" placeholder="2,33" aria-describedby="hc-studierente-fout" /><span aria-hidden="true">%</span></div>
+          <p class="fout" id="hc-studierente-fout"></p>
+        </div>
+
+        <div class="veld studie-veld">
+          <label for="hc-studielooptijd">Resterende looptijd studieschuld</label>
+          <div class="invoer"><input id="hc-studielooptijd" name="studielooptijd" inputmode="numeric" placeholder="35" aria-describedby="hc-studielooptijd-fout" /><span aria-hidden="true">jaar</span></div>
+          <p class="fout" id="hc-studielooptijd-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="hc-label">Energielabel woning</label>
+          <select id="hc-label" name="label">
+            {Object.entries(ENERGIELABELS).map(([waarde, l]) => <option value={waarde}>{l.label}</option>)}
+          </select>
+          <p class="hint">Een zuinige woning geeft extra leenruimte.</p>
+        </div>
+
+        <div class="veld">
+          <label for="hc-woningwaarde">Koopsom / woningwaarde</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="hc-woningwaarde" name="woningwaarde" inputmode="decimal" aria-describedby="hc-woningwaarde-hint hc-woningwaarde-fout" /></div>
+          <p class="hint" id="hc-woningwaarde-hint">Je kunt maximaal 100% van de woningwaarde lenen.</p>
+          <p class="fout" id="hc-woningwaarde-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="hc-leenbedrag">Bedrag dat je wilt lenen</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="hc-leenbedrag" name="leenbedrag" inputmode="decimal" placeholder="maximum" aria-describedby="hc-leenbedrag-hint hc-leenbedrag-fout" /></div>
+          <p class="hint" id="hc-leenbedrag-hint">Leeg = rekenen met je maximale hypotheek.</p>
+          <p class="fout" id="hc-leenbedrag-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="hc-waardestijging">Verwachte waardestijging woning</label>
+          <div class="invoer"><input id="hc-waardestijging" name="waardestijging" inputmode="decimal" placeholder="0" aria-describedby="hc-waardestijging-hint hc-waardestijging-fout" /><span aria-hidden="true">% per jaar</span></div>
+          <p class="hint" id="hc-waardestijging-hint">Een aanname, geen voorspelling.</p>
+          <p class="fout" id="hc-waardestijging-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label class="check"><input type="checkbox" name="aow" /> Ik heb de AOW-leeftijd bereikt</label>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel hoofd"><p class="tegel-label">Maximale hypotheek</p><p class="tegel-waarde" data-out="max"></p><p class="tegel-sub" data-out="max-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Bruto maandlast</p><p class="tegel-waarde" data-out="bruto"></p><p class="tegel-sub" data-out="bruto-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Netto maandlast (eerste jaar)</p><p class="tegel-waarde" data-out="netto"></p><p class="tegel-sub">Na hypotheekrenteaftrek en eigenwoningforfait.</p></div>
+      <div class="tegel" data-studie-tegel hidden><p class="tegel-label">Minder hypotheek door studieschuld</p><p class="tegel-waarde" data-out="studie"></p><p class="tegel-sub" data-out="studie-sub"></p></div>
+    </div>
+    <p class="waarschuwing" data-out="waarschuwing" hidden></p>
+
+    <details class="opbouw" open>
+      <summary>Zo is je maximale hypotheek opgebouwd</summary>
+      <table>
+        <tbody data-out="opbouw"></tbody>
+      </table>
+    </details>
+
+    <h3>Wat bouw je op, en wat kost het?</h3>
+    <p data-out="terugwinnen"></p>
+
+    <figure class="grafiek">
+      <figcaption>
+        <span class="grafiek-titel">Overwaarde tegenover betaalde rente</span>
+        <span class="legenda">
+          <span class="legenda-item"><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-1" /></svg>Overwaarde (jouw vermogen in het huis)</span>
+          <span class="legenda-item"><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-2 stippel" /></svg>Betaalde rente, netto (opgeteld)</span>
+        </span>
+      </figcaption>
+      <div class="grafiek-vlak">
+        <svg class="plot" role="img" tabindex="0" aria-label="Lijngrafiek van de overwaarde en de opgetelde netto rente per jaar. Gebruik de pijltjestoetsen om per jaar de waarden te lezen."></svg>
+        <div class="tooltip" hidden></div>
+      </div>
+    </figure>
+
+    <details class="tabel">
+      <summary>Bekijk als tabel per jaar</summary>
+      <div class="tabel-scroll">
+        <table>
+          <thead><tr><th>Jaar</th><th>Restschuld</th><th>Woningwaarde</th><th>Overwaarde</th><th>Rente netto (opgeteld)</th></tr></thead>
+          <tbody data-out="tabel"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>Gebaseerd op de Tijdelijke regeling hypothecair krediet 2026 en het Nibud-advies 2026. Banken kunnen in de praktijk iets anders rekenen.</li>
+        <li>Een annuïteitenhypotheek met een looptijd van 30 jaar en volledig aftrekbare rente.</li>
+        <li>Andere schulden dan een studieschuld (zoals een persoonlijke lening, creditcard of private lease) zijn niet meegenomen. Die verlagen je maximale hypotheek ook.</li>
+        <li>De netto maandlast gebruikt het aftrektarief van 2026 (37,56%, of 35,75% bij een inkomen tot € 38.883) voor de hele looptijd. Zonder koopsom rekent de calculator met een woningwaarde gelijk aan het leenbedrag.</li>
+        <li>De rente blijft de hele looptijd gelijk, ook na de rentevaste periode.</li>
+        <li>Kosten koper (overdrachtsbelasting, notaris, taxatie, advies) kun je niet meefinancieren. Die moet je zelf betalen.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { maakLijnGrafiek } from '../../lib/lijngrafiek';
+  import { parseGetal } from '../../lib/getal';
+  import { berekenHypotheek, type Energielabel, type HypotheekInvoer, type HypotheekResultaat } from '../../lib/hypotheek';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const euroCent = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = (n: number) => `${n.toLocaleString('nl-NL', { maximumFractionDigits: 2 })}%`;
+
+  interface VeldRegel {
+    naam: string;
+    verplicht: boolean;
+    min: number;
+    max: number;
+    geheel?: boolean;
+    melding: string;
+  }
+
+  const REGELS: VeldRegel[] = [
+    { naam: 'inkomen', verplicht: true, min: 0, max: 10000000, melding: 'Vul een inkomen in van € 0 of meer.' },
+    { naam: 'partnerinkomen', verplicht: false, min: 0, max: 10000000, melding: 'Vul een inkomen van € 0 of meer in, of laat leeg.' },
+    { naam: 'rente', verplicht: true, min: 0.1, max: 15, melding: 'Vul een rente in tussen 0,1% en 15%.' },
+    { naam: 'studieschuld', verplicht: false, min: 0, max: 500000, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+    { naam: 'studierente', verplicht: false, min: 0, max: 15, melding: 'Vul een rente in tussen 0% en 15%, of laat leeg.' },
+    { naam: 'studielooptijd', verplicht: false, min: 1, max: 35, geheel: true, melding: 'Vul een hele looptijd in tussen 1 en 35 jaar, of laat leeg.' },
+    { naam: 'woningwaarde', verplicht: false, min: 1, max: 10000000, melding: 'Vul een bedrag in, of laat leeg.' },
+    { naam: 'leenbedrag', verplicht: false, min: 0, max: 10000000, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+    { naam: 'waardestijging', verplicht: false, min: -10, max: 15, melding: 'Vul een percentage in tussen -10% en 15%, of laat leeg.' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const kiezer = (naam: string) => form.elements.namedItem(naam) as HTMLSelectElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+    const grafiek = maakLijnGrafiek(root.querySelector<HTMLElement>('.grafiek-vlak')!);
+    const partnerCheck = veld('partner');
+    const partnerVeld = root.querySelector<HTMLElement>('.partner-veld')!;
+    const studieTegel = root.querySelector<HTMLElement>('[data-studie-tegel]')!;
+
+    partnerCheck.addEventListener('change', () => {
+      partnerVeld.hidden = !partnerCheck.checked;
+    });
+
+    function leesInvoer(): HypotheekInvoer | null {
+      const waarden: Record<string, number | undefined> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#hc-${regel.naam}-fout`)!;
+        const tekst = input.value.trim();
+        let ok = true;
+        let waarde: number | undefined;
+        if (regel.naam === 'partnerinkomen' && !partnerCheck.checked) {
+          waarde = undefined;
+        } else if (tekst === '') {
+          ok = !regel.verplicht;
+        } else {
+          waarde = parseGetal(tekst);
+          ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max && (!regel.geheel || Number.isInteger(waarde));
+        }
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      if (!geldig) return null;
+      return {
+        inkomen: waarden.inkomen!,
+        partner: partnerCheck.checked,
+        partnerInkomen: waarden.partnerinkomen,
+        aowBereikt: veld('aow').checked,
+        rentePct: waarden.rente!,
+        rentevastJaren: Number(kiezer('rentevast').value),
+        energielabel: kiezer('label').value as Energielabel,
+        studieschuld: waarden.studieschuld,
+        studieRentePct: waarden.studierente ?? 2.33,
+        studieLooptijdJaren: waarden.studielooptijd ?? 35,
+        woningwaarde: waarden.woningwaarde,
+        leenbedrag: waarden.leenbedrag,
+        waardestijgingPct: waarden.waardestijging,
+      };
+    }
+
+    function rij(label: string, waarde: string, klasse?: string) {
+      const tr = document.createElement('tr');
+      if (klasse) tr.className = klasse;
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = label;
+      const td = document.createElement('td');
+      td.textContent = waarde;
+      tr.append(th, td);
+      return tr;
+    }
+
+    function toonResultaat(invoer: HypotheekInvoer, r: HypotheekResultaat) {
+      out('max').textContent = euro.format(r.maxHypotheek);
+      out('max-sub').textContent = r.begrensdOpWoningwaarde
+        ? `Begrensd op de woningwaarde. Op basis van inkomen: ${euro.format(r.maxOpInkomen)}.`
+        : `Op basis van een toetsinkomen van ${euro.format(r.toetsinkomen)}.`;
+      out('bruto').textContent = euroCent.format(r.brutoMaandlast);
+      out('bruto-sub').textContent = `Voor ${euro.format(r.hypotheek)}. In de eerste maand ${euro.format(r.renteEersteMaand)} rente en ${euro.format(r.aflossingEersteMaand)} aflossing.`;
+      out('netto').textContent = euroCent.format(r.nettoMaandlast);
+
+      const heeftStudieschuld = (invoer.studieschuld ?? 0) > 0;
+      studieTegel.hidden = !heeftStudieschuld;
+      if (heeftStudieschuld) {
+        out('studie').textContent = `− ${euro.format(r.verlagingDoorStudieschuld)}`;
+        out('studie-sub').textContent = `Maandbedrag ${euroCent.format(r.studieMaandlast)} × factor ${r.bruteringsfactor.toLocaleString('nl-NL')} gaat af van je maandruimte.`;
+      }
+
+      const waarschuwing = out('waarschuwing');
+      const teHoog = invoer.leenbedrag !== undefined && invoer.leenbedrag > r.maxHypotheek;
+      waarschuwing.hidden = !teHoog;
+      if (teHoog) waarschuwing.textContent = `Let op: ${euro.format(invoer.leenbedrag!)} is meer dan je volgens de normen maximaal kunt lenen (${euro.format(r.maxHypotheek)}).`;
+
+      const opbouw: HTMLTableRowElement[] = [
+        rij(`Op basis van inkomen (${pct(r.financieringslastPct)} van ${euro.format(r.toetsinkomen)}, toetsrente ${pct(r.toetsrente)})`, euro.format(r.maxZonderStudieschuld)),
+      ];
+      if (heeftStudieschuld) opbouw.push(rij('Studieschuld', `− ${euro.format(r.verlagingDoorStudieschuld)}`, 'min'));
+      if (r.extraAlleenstaande) opbouw.push(rij('Extra leenruimte alleenstaande', `+ ${euro.format(r.extraAlleenstaande)}`));
+      if (r.extraEnergielabel) opbouw.push(rij('Extra leenruimte energielabel', `+ ${euro.format(r.extraEnergielabel)}`));
+      if (r.begrensdOpWoningwaarde) {
+        opbouw.push(rij('Totaal op basis van inkomen', euro.format(r.maxOpInkomen)));
+        opbouw.push(rij('Begrensd op 100% van de woningwaarde', euro.format(r.maxHypotheek), 'totaal'));
+      } else {
+        opbouw.push(rij('Maximale hypotheek', euro.format(r.maxHypotheek), 'totaal'));
+      }
+      out('opbouw').replaceChildren(...opbouw);
+
+      const laatste = r.jaren[r.jaren.length - 1];
+      const zelfInbreng = invoer.woningwaarde !== undefined ? Math.max(0, invoer.woningwaarde - r.hypotheek) : 0;
+      out('terugwinnen').textContent =
+        `In 30 jaar betaal je in totaal ${euro.format(r.brutoMaandlast * 360)} bruto. Daarvan is ${euro.format(r.hypotheek)} aflossing: dat geld bouw je op als vermogen in je huis. ` +
+        `De rente is ${euro.format(r.totaalBrutoRente)} bruto, ofwel ongeveer ${euro.format(r.totaalNettoRente)} netto na belastingvoordeel. Die rente krijg je niet terug. ` +
+        (zelfInbreng > 0 ? `Daarnaast leg je ${euro.format(zelfInbreng)} eigen geld in (exclusief kosten koper). ` : '') +
+        `Na 30 jaar is de hypotheek afgelost en is je overwaarde ${euro.format(laatste.overwaarde)}` +
+        ((invoer.waardestijgingPct ?? 0) !== 0 ? `, uitgaande van ${pct(invoer.waardestijgingPct!)} waardestijging per jaar.` : ', zonder waardestijging.');
+
+      out('tabel').replaceChildren(
+        ...r.jaren.slice(1).map((j) => {
+          const tr = document.createElement('tr');
+          for (const tekst of [String(j.jaar), euro.format(j.restschuld), euro.format(j.woningwaarde), euro.format(j.overwaarde), euro.format(j.renteNettoCumulatief)]) {
+            const td = document.createElement('td');
+            td.textContent = tekst;
+            tr.append(td);
+          }
+          return tr;
+        }),
+      );
+
+      grafiek.teken({
+        x: r.jaren.map((j) => j.jaar),
+        reeksen: [
+          { naam: 'overwaarde', slot: 1, waarden: r.jaren.map((j) => j.overwaarde) },
+          { naam: 'betaalde rente (netto)', slot: 2, stippel: true, waarden: r.jaren.map((j) => j.renteNettoCumulatief) },
+        ],
+        xTitel: 'jaren na aankoop',
+        tooltipKop: (jaar) => (jaar === 0 ? 'Bij aankoop' : `Na jaar ${jaar}`),
+        formatteer: (w) => euro.format(w),
+      });
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+      toonResultaat(invoer, berekenHypotheek(invoer));
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('change', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-hypotheek-calc]').forEach(init);
+</script>

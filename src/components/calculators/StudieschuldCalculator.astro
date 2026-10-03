@@ -1,0 +1,334 @@
+---
+/** Interactieve calculator voor het terugbetalen van een studieschuld. Rekenlogica: src/lib/studieschuld.ts */
+import InfoKnop from './InfoKnop.astro';
+import '../../styles/calculator.css';
+
+// Bron: CBS, cao-lonen derde kwartaal 2026 (gepubliceerd 1 oktober 2026).
+const branches = [
+  { naam: 'Bouwnijverheid', pct: '5,0%' },
+  { naam: 'Specialistische zakelijke diensten', pct: '5,0%' },
+  { naam: 'Financiële dienstverlening', pct: '4,9%' },
+  { naam: 'Onderwijs', pct: '4,4%' },
+  { naam: 'Industrie', pct: '4,2%' },
+  { naam: 'Handel', pct: '3,9%' },
+  { naam: 'Zorg en welzijn', pct: '3,8%' },
+  { naam: 'Vervoer en opslag', pct: '3,7%' },
+  { naam: 'Openbaar bestuur', pct: '3,4%' },
+  { naam: 'ICT (informatie en communicatie)', pct: '3,1%' },
+  { naam: 'Horeca', pct: '2,9%' },
+];
+---
+
+<section class="calc" id="calculator" data-studieschuld-calc aria-labelledby="calc-titel">
+  <h2 id="calc-titel">Bereken het zelf</h2>
+  <p class="muted intro">Vul je eigen situatie in. De velden onder <em>Extra opties</em> zijn niet verplicht.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <label for="ss-schuld">Studieschuld</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="ss-schuld" name="schuld" inputmode="decimal" value="30.000" aria-describedby="ss-schuld-fout" /></div>
+        <p class="fout" id="ss-schuld-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="ss-regeling">Regeling</label>
+        <select id="ss-regeling" name="regeling">
+          <option value="SF35">SF35 (35 jaar)</option>
+          <option value="SF15">SF15 (15 jaar)</option>
+        </select>
+        <p class="hint">Zie Mijn DUO welke voor jou geldt.</p>
+      </div>
+
+      <div class="veld">
+        <label for="ss-rente">Rente per jaar</label>
+        <div class="invoer"><input id="ss-rente" name="rente" inputmode="decimal" value="2,33" aria-describedby="ss-rente-hint ss-rente-fout" /><span aria-hidden="true">%</span></div>
+        <p class="hint" id="ss-rente-hint">2026: 2,33% (SF35), 2,29% (SF15).</p>
+        <p class="fout" id="ss-rente-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="ss-looptijd">Looptijd</label>
+        <div class="invoer"><input id="ss-looptijd" name="looptijd" inputmode="numeric" value="35" aria-describedby="ss-looptijd-fout" /><span aria-hidden="true">jaar</span></div>
+        <p class="fout" id="ss-looptijd-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="ss-start">Begin met aflossen over</label>
+        <div class="invoer"><input id="ss-start" name="start" inputmode="decimal" value="2" aria-describedby="ss-start-hint ss-start-fout" /><span aria-hidden="true">jaar</span></div>
+        <p class="hint" id="ss-start-hint">De aanloopfase is 2 jaar. Al aan het aflossen? Vul 0 in.</p>
+        <p class="fout" id="ss-start-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="ss-inkomen">Verwacht bruto jaarinkomen</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="ss-inkomen" name="inkomen" inputmode="decimal" value="30.000" aria-describedby="ss-inkomen-hint ss-inkomen-fout" /></div>
+        <p class="hint" id="ss-inkomen-hint">In het eerste jaar dat je aflost.</p>
+        <p class="fout" id="ss-inkomen-fout"></p>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Extra opties <span class="muted">(niet verplicht)</span></legend>
+      <div class="velden">
+        <div class="veld">
+          <div class="label-rij">
+            <label for="ss-groei">Salarisgroei per jaar</label>
+            <InfoKnop id="ss-groei-info" label="Info over salarisgroei per branche">
+              <p class="info-titel">Cao-loonstijging per branche</p>
+              <table>
+                <tbody>
+                  {branches.map((b) => <tr><td>{b.naam}</td><td>{b.pct}</td></tr>)}
+                  <tr class="totaal"><td>Gemiddeld</td><td>4,0%</td></tr>
+                </tbody>
+              </table>
+              <p>Bron: CBS, 3e kwartaal 2026.</p>
+              <p>Dit is de algemene loonsverhoging uit de cao. Persoonlijke stappen (periodieken, promotie) komen daar vaak bovenop, vooral vroeg in je loopbaan.</p>
+              <p>De huidige stijgingen zijn hoog door de inflatie van de afgelopen jaren. In de jaren vóór 2022 lag de gemiddelde cao-loonstijging meestal tussen 1% en 2,5%. Voor een looptijd van 35 jaar is een gematigder percentage daarom realistischer.</p>
+            </InfoKnop>
+          </div>
+          <div class="invoer"><input id="ss-groei" name="groei" inputmode="decimal" placeholder="0" aria-describedby="ss-groei-fout" /><span aria-hidden="true">%</span></div>
+          <p class="fout" id="ss-groei-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="ss-inflatie">Inflatie per jaar</label>
+          <div class="invoer"><input id="ss-inflatie" name="inflatie" inputmode="decimal" placeholder="0" aria-describedby="ss-inflatie-hint ss-inflatie-fout" /><span aria-hidden="true">%</span></div>
+          <p class="hint" id="ss-inflatie-hint">Toont je schuld ook in euro's van nu. Ter referentie: gemiddeld 2,4% per jaar over 2001–2025 (CBS). In 2025 was het 3,3%; de ECB streeft naar 2%.</p>
+          <p class="fout" id="ss-inflatie-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="ss-extra">Extra aflossing per maand</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="ss-extra" name="extra" inputmode="decimal" placeholder="0" aria-describedby="ss-extra-fout" /></div>
+          <p class="fout" id="ss-extra-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label class="check"><input type="checkbox" id="ss-partner" name="partner" /> Ik heb een (fiscale) partner</label>
+          <div class="partner-veld" hidden>
+            <label for="ss-partnerinkomen">Bruto jaarinkomen partner</label>
+            <div class="invoer"><span aria-hidden="true">€</span><input id="ss-partnerinkomen" name="partnerinkomen" inputmode="decimal" placeholder="0" aria-describedby="ss-partnerinkomen-fout" /></div>
+            <p class="fout" id="ss-partnerinkomen-fout"></p>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel"><p class="tegel-label">Maandbedrag eerste aflosjaar</p><p class="tegel-waarde" data-out="maandbedrag"></p><p class="tegel-sub" data-out="maandbedrag-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Schuld bij start aflossen</p><p class="tegel-waarde" data-out="start"></p></div>
+      <div class="tegel"><p class="tegel-label">Totaal terugbetaald</p><p class="tegel-waarde" data-out="betaald"></p><p class="tegel-sub" data-out="rente"></p></div>
+      <div class="tegel"><p class="tegel-label" data-out="eind-label"></p><p class="tegel-waarde" data-out="eind"></p><p class="tegel-sub" data-out="eind-sub"></p></div>
+    </div>
+    <p class="waarschuwing" data-out="waarschuwing" hidden></p>
+
+    <figure class="grafiek">
+      <figcaption>
+        <span class="grafiek-titel">Resterende schuld per jaar</span>
+        <span class="legenda">
+          <span class="legenda-item"><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-1" /></svg>Schuld</span>
+          <span class="legenda-item" data-reeel-legenda hidden><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-2 stippel" /></svg>In euro's van nu</span>
+        </span>
+      </figcaption>
+      <div class="grafiek-vlak">
+        <svg class="plot" role="img" tabindex="0" aria-label="Lijngrafiek van de resterende schuld per jaar. Gebruik de pijltjestoetsen om per jaar de waarden te lezen."></svg>
+        <div class="tooltip" hidden></div>
+      </div>
+    </figure>
+
+    <details class="tabel">
+      <summary>Bekijk als tabel per jaar</summary>
+      <div class="tabel-scroll">
+        <table>
+          <thead><tr><th>Jaar</th><th class="tekst">Fase</th><th>Maandbedrag</th><th>Betaald</th><th>Rente</th><th>Schuld eind jaar</th></tr></thead>
+          <tbody data-out="tabel"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>De rente blijft de hele looptijd gelijk. In werkelijkheid staat de rente 5 jaar vast en wordt hij daarna opnieuw vastgesteld.</li>
+        <li>DUO kijkt naar je inkomen van 2 jaar eerder. De calculator gebruikt voor de eenvoud het inkomen van hetzelfde jaar.</li>
+        <li>De vrijgestelde inkomensgrenzen blijven op het niveau van 2026. DUO past ze in werkelijkheid jaarlijks aan.</li>
+        <li>DUO berekent het maandbedrag ieder jaar opnieuw op basis van je resterende schuld en looptijd. Aflosvrije periodes zijn niet meegenomen.</li>
+        <li>Wat na de looptijd nog over is, wordt kwijtgescholden (zonder betalingsachterstanden).</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { maakLijnGrafiek } from '../../lib/lijngrafiek';
+  import { parseGetal } from '../../lib/getal';
+  import { berekenStudieschuld, REGELINGEN, RENTE_2026, type Regeling, type StudieschuldInvoer, type StudieschuldResultaat } from '../../lib/studieschuld';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const euroCent = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  interface VeldRegel {
+    naam: string;
+    verplicht: boolean;
+    min: number;
+    max: number;
+    geheel?: boolean;
+    melding: string;
+  }
+
+  const REGELS: VeldRegel[] = [
+    { naam: 'schuld', verplicht: true, min: 1, max: 500000, melding: 'Vul een bedrag in tussen € 1 en € 500.000.' },
+    { naam: 'rente', verplicht: true, min: 0, max: 15, melding: 'Vul een rente in tussen 0% en 15%.' },
+    { naam: 'looptijd', verplicht: true, min: 1, max: 50, geheel: true, melding: 'Vul een hele looptijd in tussen 1 en 50 jaar.' },
+    { naam: 'start', verplicht: true, min: 0, max: 10, melding: 'Vul een waarde in tussen 0 en 10 jaar.' },
+    { naam: 'inkomen', verplicht: true, min: 0, max: 10000000, melding: 'Vul een inkomen in van € 0 of meer.' },
+    { naam: 'groei', verplicht: false, min: -10, max: 20, melding: 'Vul een percentage in tussen -10% en 20%, of laat leeg.' },
+    { naam: 'inflatie', verplicht: false, min: -5, max: 20, melding: 'Vul een percentage in tussen -5% en 20%, of laat leeg.' },
+    { naam: 'extra', verplicht: false, min: 0, max: 100000, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+    { naam: 'partnerinkomen', verplicht: false, min: 0, max: 10000000, melding: 'Vul een inkomen van € 0 of meer in, of laat leeg.' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+    const grafiek = maakLijnGrafiek(root.querySelector<HTMLElement>('.grafiek-vlak')!);
+    const reeelLegenda = root.querySelector<HTMLElement>('[data-reeel-legenda]')!;
+    const regelingSelect = form.elements.namedItem('regeling') as HTMLSelectElement;
+    const partnerCheck = veld('partner');
+    const partnerVeld = root.querySelector<HTMLElement>('.partner-veld')!;
+
+    // Looptijd en rente volgen de regeling, tot de gebruiker ze zelf aanpast.
+    const aangepast = new Set<string>();
+    for (const naam of ['looptijd', 'rente']) veld(naam).addEventListener('input', () => aangepast.add(naam));
+    regelingSelect.addEventListener('change', () => {
+      const r = regelingSelect.value as Regeling;
+      if (!aangepast.has('looptijd')) veld('looptijd').value = String(REGELINGEN[r].looptijdJaren);
+      if (!aangepast.has('rente')) veld('rente').value = String(RENTE_2026[r]).replace('.', ',');
+    });
+    partnerCheck.addEventListener('change', () => {
+      partnerVeld.hidden = !partnerCheck.checked;
+    });
+
+    function leesInvoer(): StudieschuldInvoer | null {
+      const waarden: Record<string, number | undefined> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#ss-${regel.naam}-fout`)!;
+        const tekst = input.value.trim();
+        let ok = true;
+        let waarde: number | undefined;
+        if (regel.naam === 'partnerinkomen' && !partnerCheck.checked) {
+          waarde = undefined;
+        } else if (tekst === '') {
+          ok = !regel.verplicht;
+        } else {
+          waarde = parseGetal(tekst);
+          ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max && (!regel.geheel || Number.isInteger(waarde));
+        }
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      if (!geldig) return null;
+      return {
+        schuld: waarden.schuld!,
+        rentePct: waarden.rente!,
+        regeling: regelingSelect.value as Regeling,
+        looptijdJaren: waarden.looptijd!,
+        startNaJaren: waarden.start!,
+        brutoJaarinkomen: waarden.inkomen!,
+        salarisgroeiPct: waarden.groei,
+        inflatiePct: waarden.inflatie,
+        extraAflossingPerMaand: waarden.extra,
+        partner: partnerCheck.checked,
+        partnerInkomen: waarden.partnerinkomen,
+      };
+    }
+
+    function toonResultaat(invoer: StudieschuldInvoer, r: StudieschuldResultaat) {
+      const eerste = r.eersteJaar;
+      out('maandbedrag').textContent = eerste ? euroCent.format(eerste.maandbedrag) : '—';
+      out('maandbedrag-sub').textContent = !eerste
+        ? 'Je schuld is afgelost voordat het aflossen begint.'
+        : eerste.draagkracht < eerste.wettelijk
+          ? `Begrensd door je inkomen. Zonder die grens: ${euroCent.format(eerste.wettelijk)}.`
+          : 'Het wettelijk maandbedrag. Je inkomen begrenst dit niet.';
+      out('start').textContent = euro.format(r.schuldBijStart);
+      out('betaald').textContent = euro.format(r.totaalBetaald);
+      out('rente').textContent = `Totaal opgebouwde rente: ${euro.format(r.totaalRente)}`;
+      if (r.afgelostInJaar !== null) {
+        out('eind-label').textContent = 'Schuldenvrij';
+        out('eind').textContent = `na ${r.afgelostInJaar} jaar`;
+        out('eind-sub').textContent = 'Niets kwijtgescholden.';
+      } else {
+        out('eind-label').textContent = 'Kwijtgescholden na de looptijd';
+        out('eind').textContent = euro.format(r.kwijtgescholden);
+        out('eind-sub').textContent = `Na ${invoer.startNaJaren + invoer.looptijdJaren} jaar vanaf nu.`;
+      }
+
+      const waarschuwing = out('waarschuwing');
+      const dektRenteNiet = eerste !== null && eerste.maandbedrag + (invoer.extraAflossingPerMaand ?? 0) < eerste.renteMaand;
+      waarschuwing.hidden = !dektRenteNiet;
+      if (dektRenteNiet && eerste) {
+        waarschuwing.textContent = `Let op: in het eerste aflosjaar is de rente ongeveer ${euroCent.format(eerste.renteMaand)} per maand. Je maandbedrag dekt dat niet, dus je schuld groeit eerst.`;
+      }
+
+      out('tabel').replaceChildren(
+        ...r.jaren.map((j) => {
+          const tr = document.createElement('tr');
+          const cellen: [string, string?][] = [
+            [String(j.jaar)],
+            [j.fase === 'aanloop' ? 'Aanloop' : 'Aflossen', 'tekst'],
+            [j.fase === 'aanloop' ? '—' : euroCent.format(j.maandbedrag)],
+            [euro.format(j.betaald)],
+            [euro.format(j.rente)],
+            [euro.format(j.schuldEind)],
+          ];
+          for (const [tekst, klasse] of cellen) {
+            const td = document.createElement('td');
+            td.textContent = tekst;
+            if (klasse) td.className = klasse;
+            tr.append(td);
+          }
+          return tr;
+        }),
+      );
+
+      const metReeel = (invoer.inflatiePct ?? 0) !== 0;
+      reeelLegenda.hidden = !metReeel;
+      grafiek.teken({
+        x: [0, ...r.jaren.map((j) => j.jaar)],
+        reeksen: [
+          { naam: 'schuld', slot: 1, waarden: [invoer.schuld, ...r.jaren.map((j) => j.schuldEind)] },
+          ...(metReeel ? [{ naam: "in euro's van nu", slot: 2 as const, stippel: true, waarden: [invoer.schuld, ...r.jaren.map((j) => j.schuldEindReeel)] }] : []),
+        ],
+        xTitel: 'jaren vanaf nu',
+        band: { tot: invoer.startNaJaren, label: 'aanloop' },
+        tooltipKop: (jaar) => (jaar === 0 ? 'Nu' : `Na jaar ${jaar}`),
+        formatteer: (w) => euro.format(w),
+      });
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+      toonResultaat(invoer, berekenStudieschuld(invoer));
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('change', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-studieschuld-calc]').forEach(init);
+</script>
+

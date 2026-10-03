@@ -1,0 +1,165 @@
+---
+/** Zoekt de verdeling salaris/dividend met het hoogste netto-inkomen voor een DGA. Rekenlogica: src/lib/dga.ts */
+import InfoKnop from './InfoKnop.astro';
+import '../../styles/calculator.css';
+---
+
+<section class="calc" id="salaris-calculator" data-salaris-calc aria-labelledby="sd-titel">
+  <h2 id="sd-titel">Sweet spot: salaris of dividend</h2>
+  <p class="muted intro">Hoeveel salaris haal je uit je BV, en hoeveel als dividend? Met de tarieven van 2026.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <label for="sd-winst">Winst van de BV vóór jouw salaris</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="sd-winst" name="winst" inputmode="decimal" value="150.000" aria-describedby="sd-winst-hint sd-winst-fout" /></div>
+        <p class="hint" id="sd-winst-hint">Per jaar. Wat je samen als salaris en dividend kunt opnemen.</p>
+        <p class="fout" id="sd-winst-fout"></p>
+      </div>
+
+      <div class="veld">
+        <div class="label-rij">
+          <label for="sd-minimum">Minimumsalaris (gebruikelijk loon)</label>
+          <InfoKnop id="sd-minimum-info" label="Info over gebruikelijk loon">
+            <p class="info-titel">Moet je salaris betalen?</p>
+            <p><strong>Werk je in je BV,</strong> dan moet je jezelf minimaal het gebruikelijk loon betalen. In 2026 is dat het hoogste van € 58.000, het salaris van een vergelijkbare baan, en het salaris van je best betaalde werknemer.</p>
+            <p><strong>Uitzondering:</strong> is je gebruikelijk loon voor al je werk bij je BV's samen € 5.000 of minder, dan hoef je dat niet te betalen. Kun je aantonen dat een vergelijkbare baan minder betaalt, of maakt je BV te weinig winst, dan kan een lager salaris.</p>
+            <p><strong>Puur beleggende BV:</strong> doe je geen werk voor de BV, dan geldt de regeling niet. Vul dan 0 in.</p>
+          </InfoKnop>
+        </div>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="sd-minimum" name="minimum" inputmode="decimal" value="58.000" aria-describedby="sd-minimum-fout" /></div>
+        <p class="fout" id="sd-minimum-fout"></p>
+      </div>
+    </div>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel hoofd"><p class="tegel-label">Beste verdeling</p><p class="tegel-waarde" data-out="beste"></p><p class="tegel-sub" data-out="beste-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Netto voor jou per jaar</p><p class="tegel-waarde" data-out="netto"></p><p class="tegel-sub" data-out="netto-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Alles als salaris</p><p class="tegel-waarde" data-out="alles"></p><p class="tegel-sub" data-out="alles-sub"></p></div>
+    </div>
+
+    <details class="opbouw" open>
+      <summary>Zo is de beste verdeling opgebouwd</summary>
+      <table>
+        <tbody data-out="opbouw"></tbody>
+      </table>
+    </details>
+
+    <figure class="grafiek">
+      <figcaption>
+        <span class="grafiek-titel">Netto voor jou bij elk salaris</span>
+      </figcaption>
+      <div class="grafiek-vlak">
+        <svg class="plot" role="img" tabindex="0" aria-label="Lijngrafiek van je totale netto-inkomen per salarisniveau. Gebruik de pijltjestoetsen om de waarden te lezen."></svg>
+        <div class="tooltip" hidden></div>
+      </div>
+    </figure>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>Tarieven 2026: box 1 met algemene heffingskorting en arbeidskorting, inkomensafhankelijke bijdrage Zvw (4,85%), vennootschapsbelasting (19% / 25,8%) en box 2 (24,5% / 31%).</li>
+        <li>Je bent als DGA niet verzekerd voor de werknemersverzekeringen. Je BV betaalt dan geen werkgeversheffing Zvw en geen WW-premie; je betaalt zelf de Zvw-bijdrage.</li>
+        <li>Alle winst na salaris en vennootschapsbelasting wordt elk jaar als dividend uitgekeerd. Laat je winst in de BV staan, dan betaal je de box 2-belasting pas later.</li>
+        <li>Niet meegenomen: pensioenopbouw, toeslagen, je eventuele andere inkomen, en de partnerverdeling in box 2.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { maakLijnGrafiek } from '../../lib/lijngrafiek';
+  import { parseGetal } from '../../lib/getal';
+  import { sweetSpot, type SweetSpot } from '../../lib/dga';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const pct = (n: number) => `${(n * 100).toLocaleString('nl-NL', { maximumFractionDigits: 1 })}%`;
+
+  const REGELS = [
+    { naam: 'winst', verplicht: true, min: 1000, max: 10000000, melding: 'Vul een winst in tussen € 1.000 en € 10 miljoen.' },
+    { naam: 'minimum', verplicht: true, min: 0, max: 1000000, melding: 'Vul een bedrag van € 0 of meer in.' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+    const grafiek = maakLijnGrafiek(root.querySelector<HTMLElement>('.grafiek-vlak')!);
+
+    function leesInvoer(): { winst: number; minimum: number } | null {
+      const waarden: Record<string, number> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#sd-${regel.naam}-fout`)!;
+        const waarde = parseGetal(input.value.trim());
+        const ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max;
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      return geldig ? { winst: waarden.winst, minimum: waarden.minimum } : null;
+    }
+
+    function rij(label: string, waarde: string, klasse?: string) {
+      const tr = document.createElement('tr');
+      if (klasse) tr.className = klasse;
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = label;
+      const td = document.createElement('td');
+      td.textContent = waarde;
+      tr.append(th, td);
+      return tr;
+    }
+
+    function toonResultaat(winst: number, s: SweetSpot) {
+      const b = s.beste;
+      out('beste').textContent = `${euro.format(b.salaris)} salaris`;
+      out('beste-sub').textContent = b.dividend > 0 ? `De rest, ${euro.format(b.dividend)}, als dividend na vennootschapsbelasting.` : 'Geen dividend: de hele winst gaat naar salaris.';
+      out('netto').textContent = euro.format(b.totaalNetto);
+      out('netto-sub').textContent = `${pct(b.druk)} van de winst gaat naar belasting en premies.`;
+      out('alles').textContent = euro.format(s.alleenSalaris.totaalNetto);
+      const verschil = b.totaalNetto - s.alleenSalaris.totaalNetto;
+      out('alles-sub').textContent = verschil > 0.5 ? `${euro.format(verschil)} per jaar minder dan de beste verdeling.` : 'Hier is alles als salaris de beste verdeling.';
+
+      out('opbouw').replaceChildren(
+        rij('Salaris (bruto)', euro.format(b.salaris)),
+        rij('Netto salaris na belasting en Zvw', euro.format(b.nettoSalaris)),
+        rij('Winst na salaris', euro.format(winst - b.salaris)),
+        rij('Vennootschapsbelasting', `− ${euro.format(b.vpb)}`, 'min'),
+        rij('Dividend', euro.format(b.dividend)),
+        rij('Box 2-belasting', `− ${euro.format(b.dividend - b.nettoDividend)}`, 'min'),
+        rij('Netto dividend', euro.format(b.nettoDividend)),
+        rij('Totaal netto per jaar', euro.format(b.totaalNetto), 'totaal'),
+      );
+
+      grafiek.teken({
+        x: s.curve.map((v) => v.salaris),
+        reeksen: [{ naam: 'netto per jaar', slot: 1, waarden: s.curve.map((v) => v.totaalNetto) }],
+        xTitel: 'salaris per jaar',
+        formatteerX: (x) => euro.format(x),
+        tooltipKop: (x) => `Salaris ${euro.format(x)}`,
+        formatteer: (w) => euro.format(w),
+        markering: s.curve.length > 1 ? { x: b.salaris, label: 'beste' } : undefined,
+      });
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+      toonResultaat(invoer.winst, sweetSpot(invoer.winst, invoer.minimum));
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-salaris-calc]').forEach(init);
+</script>

@@ -1,0 +1,196 @@
+---
+/** Rekent beleggen met geleend geld door: resultaat na rente en box 3 (vanaf 2028). Rekenlogica: src/lib/geleend-geld.ts */
+import InfoKnop from './InfoKnop.astro';
+import '../../styles/calculator.css';
+---
+
+<section class="calc" id="calculator" data-geleend-calc aria-labelledby="gg-titel">
+  <h2 id="gg-titel">Reken het zelf door</h2>
+  <p class="muted intro">Per jaar, met box 3 volgens het stelsel vanaf 2028. Het veld onder <em>Extra opties</em> is niet verplicht.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <label for="gg-bedrag">Leenbedrag</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="gg-bedrag" name="bedrag" inputmode="decimal" value="10.000" aria-describedby="gg-bedrag-fout" /></div>
+        <p class="fout" id="gg-bedrag-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="gg-rente">Rente op de lening</label>
+        <div class="invoer"><input id="gg-rente" name="rente" inputmode="decimal" value="4" aria-describedby="gg-rente-hint gg-rente-fout" /><span aria-hidden="true">% per jaar</span></div>
+        <p class="hint" id="gg-rente-hint">Bij een lening van familie: een marktconforme rente.</p>
+        <p class="fout" id="gg-rente-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="gg-rendement">Verwacht rendement</label>
+        <div class="invoer"><input id="gg-rendement" name="rendement" inputmode="decimal" value="7" aria-describedby="gg-rendement-hint gg-rendement-fout" /><span aria-hidden="true">% per jaar</span></div>
+        <p class="hint" id="gg-rendement-hint">Dividend plus koersstijging. Geen garantie.</p>
+        <p class="fout" id="gg-rendement-fout"></p>
+      </div>
+
+      <div class="veld">
+        <div class="label-rij">
+          <label for="gg-overig">Rendement op je overige vermogen</label>
+          <InfoKnop id="gg-overig-info" label="Info over rendement op je overige vermogen">
+            <p class="info-titel">Waarom is dit nodig?</p>
+            <p>Box 3 belast je <strong>totale</strong> resultaat: het rendement op al je spaargeld en beleggingen, min de rente op je schulden. De rente van deze lening gaat dus af van je hele box 3-resultaat.</p>
+            <p>Levert je eigen vermogen dit jaar bijvoorbeeld € 5.000 op, dan verlaagt de rente de belasting daarover. Zelfs als de belegging met geleend geld 0% oplevert, betaal je dan 36% van de rente minder belasting.</p>
+            <p>De eerste € 1.800 per persoon is belastingvrij.</p>
+          </InfoKnop>
+        </div>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="gg-overig" name="overig" inputmode="decimal" value="5.000" aria-describedby="gg-overig-hint gg-overig-fout" /></div>
+        <p class="hint" id="gg-overig-hint">Dit jaar, op spaargeld en beleggingen van je eigen geld. Vul 0 in als je verder niets hebt.</p>
+        <p class="fout" id="gg-overig-fout"></p>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Extra opties <span class="muted">(niet verplicht)</span></legend>
+      <div class="velden">
+        <div class="veld">
+          <label for="gg-daling">Slecht scenario</label>
+          <div class="invoer"><input id="gg-daling" name="daling" inputmode="decimal" value="-20" aria-describedby="gg-daling-hint gg-daling-fout" /><span aria-hidden="true">%</span></div>
+          <p class="hint" id="gg-daling-hint">Hoeveel je belegging in een slecht jaar daalt.</p>
+          <p class="fout" id="gg-daling-fout"></p>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel hoofd"><p class="tegel-label">Netto resultaat per jaar</p><p class="tegel-waarde" data-out="netto"></p><p class="tegel-sub" data-out="netto-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Belastingvoordeel door renteaftrek</p><p class="tegel-waarde" data-out="voordeel"></p><p class="tegel-sub" data-out="voordeel-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Wat de rente je netto kost</p><p class="tegel-waarde" data-out="nettorente"></p><p class="tegel-sub" data-out="nettorente-sub"></p></div>
+    </div>
+
+    <div class="tabel compact">
+      <div class="tabel-scroll">
+        <table>
+          <thead><tr><th>Per jaar</th><th data-out="kop-verwacht"></th><th>0%</th><th data-out="kop-daling"></th></tr></thead>
+          <tbody data-out="tabel"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>Box 3 volgens het wetsvoorstel Wet werkelijk rendement box 3 (vanaf 2028): 36% over het werkelijke rendement min de betaalde rente. De wet is nog niet aangenomen door de Eerste Kamer.</li>
+        <li>Eén jaar, met een vast rendement. In werkelijkheid schommelt het rendement en loopt de lening meerdere jaren.</li>
+        <li>Een verlies van minstens € 500 mag je verrekenen met winst in latere jaren. Dat levert pas iets op als je later ook winst maakt.</li>
+        <li>De schuld zelf blijft staan: je moet het geleende bedrag altijd terugbetalen, ook als je belegging minder waard is geworden.</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { parseGetal } from '../../lib/getal';
+  import { geleendScenario, nettoRentePct, type GeleendInvoer } from '../../lib/geleend-geld';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const pct = (n: number) => `${n.toLocaleString('nl-NL', { maximumFractionDigits: 2 })}%`;
+  const metTeken = (n: number) => (Math.abs(n) < 0.5 ? euro.format(0) : `${n > 0 ? '+' : '−'} ${euro.format(Math.abs(n))}`);
+
+  const REGELS = [
+    { naam: 'bedrag', min: 100, max: 10000000, melding: 'Vul een bedrag in tussen € 100 en € 10 miljoen.' },
+    { naam: 'rente', min: 0, max: 25, melding: 'Vul een rente in tussen 0% en 25%.' },
+    { naam: 'rendement', min: -100, max: 100, melding: 'Vul een rendement in tussen -100% en 100%.' },
+    { naam: 'daling', min: -100, max: 0, melding: 'Vul een daling in tussen -100% en 0%.' },
+    { naam: 'overig', min: -10000000, max: 10000000, melding: 'Vul een bedrag in (0 als je verder niets hebt).' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+
+    function leesInvoer(): (GeleendInvoer & { dalingPct: number }) | null {
+      const waarden: Record<string, number> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#gg-${regel.naam}-fout`)!;
+        const waarde = parseGetal(input.value.trim());
+        const ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max;
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      if (!geldig) return null;
+      return {
+        leenbedrag: waarden.bedrag,
+        rentePct: waarden.rente,
+        rendementPct: waarden.rendement,
+        dalingPct: waarden.daling,
+        overigRendement: waarden.overig,
+      };
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+
+      const scenarios = [
+        geleendScenario(invoer),
+        geleendScenario({ ...invoer, rendementPct: 0 }),
+        geleendScenario({ ...invoer, rendementPct: invoer.dalingPct }),
+      ];
+      const [verwacht] = scenarios;
+
+      out('netto').textContent = metTeken(verwacht.netto);
+      out('netto-sub').textContent = `Bij ${pct(invoer.rendementPct)} rendement, na ${euro.format(verwacht.rente)} rente en ${verwacht.extraBelasting >= 0 ? euro.format(verwacht.extraBelasting) + ' extra' : euro.format(-verwacht.extraBelasting) + ' minder'} belasting. Break-even bij ${pct(invoer.rentePct)} rendement.`;
+      out('voordeel').textContent = euro.format(verwacht.belastingvoordeel);
+      out('voordeel-sub').textContent =
+        verwacht.belastingvoordeel > 0
+          ? `Je ${euro.format(verwacht.rente)} rente gaat af van je box 3-resultaat; dat scheelt ${pct((verwacht.belastingvoordeel / verwacht.rente) * 100)} van de rente.`
+          : 'Geen voordeel: je betaalt over dit resultaat toch al geen box 3-belasting.';
+      const volledig = verwacht.belastingvoordeel >= verwacht.rente * 0.36 - 0.5;
+      out('nettorente').textContent = volledig ? pct(nettoRentePct(invoer.rentePct)) : pct(((verwacht.rente - verwacht.belastingvoordeel) / invoer.leenbedrag) * 100);
+      out('nettorente-sub').textContent = volledig
+        ? `${pct(invoer.rentePct)} rente min 36% belastingvoordeel.`
+        : `Je krijgt het belastingvoordeel maar deels, dus de rente kost meer dan ${pct(nettoRentePct(invoer.rentePct))}.`;
+
+      out('kop-verwacht').textContent = `Verwacht (${pct(invoer.rendementPct)})`;
+      out('kop-daling').textContent = `Slecht (${pct(invoer.dalingPct)})`;
+      const rijen: [string, (s: (typeof scenarios)[number]) => string][] = [
+        ['Rendement belegging', (s) => metTeken(s.rendement)],
+        ['Rente', (s) => metTeken(-s.rente)],
+        ['Belast resultaat', (s) => metTeken(s.resultaat)],
+        ['Effect op je box 3-belasting', (s) => metTeken(s.extraBelasting)],
+        ['Voordeel renteaftrek', (s) => euro.format(s.belastingvoordeel)],
+        ['Netto resultaat', (s) => metTeken(s.netto)],
+        ['Later te verrekenen', (s) => (s.verrekenbaarVerlies > 0 ? euro.format(s.verrekenbaarVerlies) : '—')],
+        ['Je schuld blijft', () => euro.format(invoer.leenbedrag)],
+      ];
+      out('tabel').replaceChildren(
+        ...rijen.map(([label, waarde]) => {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.scope = 'row';
+          th.textContent = label;
+          tr.append(th);
+          for (const s of scenarios) {
+            const td = document.createElement('td');
+            td.textContent = waarde(s);
+            tr.append(td);
+          }
+          return tr;
+        }),
+      );
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('change', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-geleend-calc]').forEach(init);
+</script>

@@ -1,0 +1,37 @@
+---
+/** Info-knop met uitlegpaneel: zichtbaar bij hover en focus, en open te tikken op touchscreens. */
+interface Props {
+  id: string;
+  /** Toegankelijke naam van de knop, bv. "Info over salarisgroei". */
+  label: string;
+}
+
+const { id, label } = Astro.props;
+---
+
+<span class="info-wrap">
+  <button type="button" class="info" aria-expanded="false" aria-controls={id} aria-label={label}>i</button>
+  <div class="info-paneel" id={id}>
+    <slot />
+  </div>
+</span>
+
+<script>
+  for (const wrap of document.querySelectorAll<HTMLElement>('.info-wrap')) {
+    const knop = wrap.querySelector<HTMLButtonElement>('.info')!;
+    const zet = (open: boolean) => {
+      knop.setAttribute('aria-expanded', String(open));
+      wrap.classList.toggle('open', open);
+    };
+    knop.addEventListener('click', () => zet(knop.getAttribute('aria-expanded') !== 'true'));
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        zet(false);
+        knop.focus();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target as Node)) zet(false);
+    });
+  }
+</script>

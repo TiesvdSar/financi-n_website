@@ -1,0 +1,269 @@
+---
+/** Vergelijkt vermogensopbouw privé (box 3 vanaf 2028) met beleggen in een BV. Rekenlogica: src/lib/box3-bv.ts */
+import InfoKnop from './InfoKnop.astro';
+import '../../styles/calculator.css';
+---
+
+<section class="calc" id="calculator" data-box3bv-calc aria-labelledby="vb-titel">
+  <h2 id="vb-titel">Vergelijk je vermogen: box 3 of BV</h2>
+  <p class="muted intro">Box 3 volgens het stelsel vanaf 2028, de BV met de tarieven van 2026. De velden onder <em>Extra opties</em> zijn niet verplicht.</p>
+
+  <form novalidate>
+    <div class="velden">
+      <div class="veld">
+        <label for="vb-start">Startvermogen</label>
+        <div class="invoer"><span aria-hidden="true">€</span><input id="vb-start" name="start" inputmode="decimal" value="500.000" aria-describedby="vb-start-fout" /></div>
+        <p class="fout" id="vb-start-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="vb-jaren">Periode</label>
+        <div class="invoer"><input id="vb-jaren" name="jaren" inputmode="numeric" value="20" aria-describedby="vb-jaren-fout" /><span aria-hidden="true">jaar</span></div>
+        <p class="fout" id="vb-jaren-fout"></p>
+      </div>
+
+      <div class="veld">
+        <div class="label-rij">
+          <label for="vb-dividend">Dividend en rente per jaar</label>
+          <InfoKnop id="vb-dividend-info" label="Info over dividend en koersrendement">
+            <p class="info-titel">Waarom twee soorten rendement?</p>
+            <p>In box 3 wordt vanaf 2028 alles elk jaar belast: dividend, rente én koersstijging.</p>
+            <p>In een BV wordt dividend en rente elk jaar belast, maar koerswinst meestal pas als je verkoopt. Belegt je BV in accumulerende fondsen, vul dan 0% dividend in.</p>
+            <p>Wereldwijde aandelen leverden historisch gemiddeld zo'n 6 tot 8% per jaar op, waarvan ongeveer 2% dividend. Rendement uit het verleden biedt geen garantie voor de toekomst.</p>
+          </InfoKnop>
+        </div>
+        <div class="invoer"><input id="vb-dividend" name="dividend" inputmode="decimal" value="2" aria-describedby="vb-dividend-fout" /><span aria-hidden="true">%</span></div>
+        <p class="fout" id="vb-dividend-fout"></p>
+      </div>
+
+      <div class="veld">
+        <label for="vb-koers">Koersstijging per jaar</label>
+        <div class="invoer"><input id="vb-koers" name="koers" inputmode="decimal" value="5" aria-describedby="vb-koers-fout" /><span aria-hidden="true">%</span></div>
+        <p class="fout" id="vb-koers-fout"></p>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Extra opties <span class="muted">(niet verplicht)</span></legend>
+      <div class="velden">
+        <div class="veld">
+          <label for="vb-inleg">Jaarlijkse inleg</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="vb-inleg" name="inleg" inputmode="decimal" placeholder="0" aria-describedby="vb-inleg-fout" /></div>
+          <p class="fout" id="vb-inleg-fout"></p>
+        </div>
+
+        <div class="veld">
+          <label for="vb-kosten">Kosten BV per jaar</label>
+          <div class="invoer"><span aria-hidden="true">€</span><input id="vb-kosten" name="kosten" inputmode="decimal" value="2.000" aria-describedby="vb-kosten-hint vb-kosten-fout" /></div>
+          <p class="hint" id="vb-kosten-hint">Boekhouding, jaarrekening, aangiftes en bankkosten.</p>
+          <p class="fout" id="vb-kosten-fout"></p>
+        </div>
+
+        <div class="veld">
+          <div class="label-rij">
+            <label class="check"><input type="checkbox" name="zonderbox2" /> Geld blijft in de BV</label>
+            <InfoKnop id="vb-box2-info" label="Info over box 2 bij opheffen">
+              <p class="info-titel">Box 2 wel of niet meerekenen?</p>
+              <p>Standaard rekent de calculator alsof je de BV aan het eind opheft en het geld privé opneemt. Dan betaal je box 2 (24,5% / 31%) over de winst.</p>
+              <p>Vink je dit aan, dan blijft het geld in de BV, bijvoorbeeld om er later van te leven via kleine uitkeringen of om door te geven. Box 2 telt dan niet mee. Zo rekenen veel vuistregels online, zoals het omslagpunt van ongeveer € 12.500 rendement per jaar.</p>
+              <p>Box 2 verdwijnt niet: je betaalt het zodra je het geld eruit haalt.</p>
+            </InfoKnop>
+          </div>
+          <p class="hint">Box 2 bij opheffen niet meerekenen.</p>
+        </div>
+
+        <div class="veld">
+          <label class="check"><input type="checkbox" name="partner" /> Fiscale partners</label>
+          <p class="hint">Dubbel heffingsvrij resultaat in box 3 en dubbele eerste schijf in box 2.</p>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+  <div class="resultaat" aria-live="polite">
+    <div class="tegels">
+      <div class="tegel"><p class="tegel-label">Privé (box 3)</p><p class="tegel-waarde" data-out="box3"></p><p class="tegel-sub" data-out="box3-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Via een BV (laten zitten)</p><p class="tegel-waarde" data-out="bv"></p><p class="tegel-sub" data-out="bv-sub"></p></div>
+      <div class="tegel hoofd"><p class="tegel-label">Verschil na de periode</p><p class="tegel-waarde" data-out="verschil"></p><p class="tegel-sub" data-out="verschil-sub"></p></div>
+      <div class="tegel"><p class="tegel-label">Omslagpunt</p><p class="tegel-waarde" data-out="omslag"></p><p class="tegel-sub" data-out="omslag-sub"></p></div>
+    </div>
+
+    <details class="opbouw" open>
+      <summary>Belasting en kosten over de hele periode</summary>
+      <table>
+        <tbody data-out="opbouw"></tbody>
+      </table>
+    </details>
+
+    <figure class="grafiek">
+      <figcaption>
+        <span class="grafiek-titel">Netto vermogen per jaar</span>
+        <span class="legenda">
+          <span class="legenda-item"><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-1" /></svg>Privé (box 3)</span>
+          <span class="legenda-item"><svg width="20" height="8" aria-hidden="true"><line x1="0" y1="4" x2="20" y2="4" class="lijn lijn-2 stippel" /></svg><span data-out="bv-legenda">BV, netto als je in dat jaar opheft</span></span>
+        </span>
+      </figcaption>
+      <div class="grafiek-vlak">
+        <svg class="plot" role="img" tabindex="0" aria-label="Lijngrafiek van het netto vermogen per jaar, privé en via een BV. Gebruik de pijltjestoetsen om per jaar de waarden te lezen."></svg>
+        <div class="tooltip" hidden></div>
+      </div>
+    </figure>
+
+    <details class="tabel">
+      <summary>Bekijk als tabel per jaar</summary>
+      <div class="tabel-scroll">
+        <table>
+          <thead><tr><th>Jaar</th><th>Privé (box 3)</th><th>Waarde in BV</th><th>BV netto bij opheffen</th></tr></thead>
+          <tbody data-out="tabel"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="aannames">
+      <summary>Aannames en vereenvoudigingen</summary>
+      <ul>
+        <li>Box 3 volgens het wetsvoorstel Wet werkelijk rendement box 3 (vanaf 2028): 36% over dividend, rente en koersstijging boven € 1.800 per persoon. De wet is nog niet aangenomen door de Eerste Kamer.</li>
+        <li>BV: vennootschapsbelasting (19% / 25,8%) over dividend en rente min kosten, elk jaar. Koerswinst wordt pas belast bij verkoop of opheffen. Bij opheffen betaal je box 2 (24,5% / 31%) over wat je meer terugkrijgt dan je hebt ingebracht.</li>
+        <li>Rendementen zijn elk jaar gelijk. In werkelijkheid schommelen ze, en dat beïnvloedt de uitkomst.</li>
+        <li>De belasting wordt uit het vermogen zelf betaald. Je haalt verder niets op tussendoor.</li>
+        <li>Niet meegenomen: oprichtings- en liquidatiekosten van de BV, eventuele wijzigingen in tarieven en wetgeving, en de waarde van flexibiliteit (privé kun je altijd zonder extra belasting bij je geld).</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { maakLijnGrafiek } from '../../lib/lijngrafiek';
+  import { parseGetal } from '../../lib/getal';
+  import { berekenVermogen, omslagpunt, type VermogenInvoer, type VermogenResultaat } from '../../lib/box3-bv';
+
+  const euro = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+  const REGELS = [
+    { naam: 'start', verplicht: true, min: 1000, max: 100000000, geheel: false, melding: 'Vul een bedrag in tussen € 1.000 en € 100 miljoen.' },
+    { naam: 'jaren', verplicht: true, min: 1, max: 50, geheel: true, melding: 'Vul een hele periode in tussen 1 en 50 jaar.' },
+    { naam: 'dividend', verplicht: true, min: 0, max: 20, geheel: false, melding: 'Vul een percentage in tussen 0% en 20%.' },
+    { naam: 'koers', verplicht: true, min: -20, max: 30, geheel: false, melding: 'Vul een percentage in tussen -20% en 30%.' },
+    { naam: 'inleg', verplicht: false, min: 0, max: 10000000, geheel: false, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+    { naam: 'kosten', verplicht: false, min: 0, max: 100000, geheel: false, melding: 'Vul een bedrag van € 0 of meer in, of laat leeg.' },
+  ];
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector('form')!;
+    const veld = (naam: string) => form.elements.namedItem(naam) as HTMLInputElement;
+    const out = (naam: string) => root.querySelector<HTMLElement>(`[data-out="${naam}"]`)!;
+    const resultaat = root.querySelector<HTMLElement>('.resultaat')!;
+    const grafiek = maakLijnGrafiek(root.querySelector<HTMLElement>('.grafiek-vlak')!);
+
+    function leesInvoer(): VermogenInvoer | null {
+      const waarden: Record<string, number | undefined> = {};
+      let geldig = true;
+      for (const regel of REGELS) {
+        const input = veld(regel.naam);
+        const fout = root.querySelector<HTMLElement>(`#vb-${regel.naam}-fout`)!;
+        const tekst = input.value.trim();
+        let ok = true;
+        let waarde: number | undefined;
+        if (tekst === '') {
+          ok = !regel.verplicht;
+        } else {
+          waarde = parseGetal(tekst);
+          ok = !Number.isNaN(waarde) && waarde >= regel.min && waarde <= regel.max && (!regel.geheel || Number.isInteger(waarde));
+        }
+        fout.textContent = ok ? '' : regel.melding;
+        input.setAttribute('aria-invalid', String(!ok));
+        if (!ok) geldig = false;
+        waarden[regel.naam] = waarde;
+      }
+      if (!geldig) return null;
+      return {
+        startvermogen: waarden.start!,
+        jaren: waarden.jaren!,
+        dividendPct: waarden.dividend!,
+        koersPct: waarden.koers!,
+        jaarlijkseInleg: waarden.inleg,
+        bvKostenPerJaar: waarden.kosten,
+        partner: veld('partner').checked,
+        zonderBox2: veld('zonderbox2').checked,
+      };
+    }
+
+    function rij(label: string, waarde: string, klasse?: string) {
+      const tr = document.createElement('tr');
+      if (klasse) tr.className = klasse;
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = label;
+      const td = document.createElement('td');
+      td.textContent = waarde;
+      tr.append(th, td);
+      return tr;
+    }
+
+    function toonResultaat(invoer: VermogenInvoer, r: VermogenResultaat) {
+      const ingelegd = invoer.startvermogen + (invoer.jaarlijkseInleg ?? 0) * invoer.jaren;
+      out('box3').textContent = euro.format(r.box3Eind);
+      out('box3-sub').textContent = `Na ${invoer.jaren} jaar, na belasting. Ingelegd: ${euro.format(ingelegd)}.`;
+      out('bv').textContent = euro.format(r.bvEind);
+      out('bv-sub').textContent = invoer.zonderBox2
+        ? 'Waarde in de BV na vennootschapsbelasting. Box 2 betaal je pas als je het eruit haalt.'
+        : 'Netto voor jou als je de BV aan het eind opheft.';
+      const verschil = r.bvEind - r.box3Eind;
+      out('bv-legenda').textContent = invoer.zonderBox2 ? 'BV, na Vpb (zonder box 2)' : 'BV, netto als je in dat jaar opheft';
+      out('verschil').textContent = `${verschil >= 0 ? '+' : '−'} ${euro.format(Math.abs(verschil))}`;
+      out('verschil-sub').textContent = verschil >= 0 ? 'In dit scenario levert de BV meer op.' : 'In dit scenario levert privé (box 3) meer op.';
+
+      const omslag = omslagpunt({ ...invoer });
+      out('omslag').textContent = omslag === null ? 'Geen' : `vanaf ${euro.format(omslag)}`;
+      out('omslag-sub').textContent =
+        omslag === null
+          ? `Tot € 10 miljoen startvermogen levert de BV in ${invoer.jaren} jaar niet meer op.`
+          : `Startvermogen waarbij de BV in ${invoer.jaren} jaar meer oplevert, bij verder dezelfde invoer.`;
+
+      out('opbouw').replaceChildren(
+        rij('Privé: box 3-belasting', euro.format(r.box3TotaalBelasting)),
+        rij('BV: vennootschapsbelasting (incl. bij opheffen)', euro.format(r.bvTotaalVpb)),
+        rij(invoer.zonderBox2 ? 'BV: box 2 (niet meegerekend, betaal je bij opnemen)' : 'BV: box 2 bij opheffen', euro.format(r.bvBox2BijLiquidatie)),
+        rij('BV: kosten', euro.format(r.bvTotaalKosten)),
+        rij('Ter vergelijking: BV die elk jaar de winst uitkeert (ontvangen + bij opheffen)', euro.format(r.uitkeren.totaal)),
+      );
+
+      out('tabel').replaceChildren(
+        ...r.jaren.slice(1).map((j) => {
+          const tr = document.createElement('tr');
+          for (const tekst of [String(j.jaar), euro.format(j.box3), euro.format(j.bvWaarde), euro.format(j.bvNettoBijLiquidatie)]) {
+            const td = document.createElement('td');
+            td.textContent = tekst;
+            tr.append(td);
+          }
+          return tr;
+        }),
+      );
+
+      grafiek.teken({
+        x: r.jaren.map((j) => j.jaar),
+        reeksen: [
+          { naam: 'privé (box 3)', slot: 1, waarden: r.jaren.map((j) => j.box3) },
+          { naam: invoer.zonderBox2 ? 'BV, na Vpb (zonder box 2)' : 'BV, bij opheffen', slot: 2, stippel: true, waarden: r.jaren.map((j) => j.bvNettoBijLiquidatie) },
+        ],
+        xTitel: 'jaren',
+        tooltipKop: (jaar) => (jaar === 0 ? 'Start' : `Na jaar ${jaar}`),
+        formatteer: (w) => euro.format(w),
+      });
+    }
+
+    function bereken() {
+      const invoer = leesInvoer();
+      resultaat.classList.toggle('verouderd', invoer === null);
+      if (!invoer) return;
+      toonResultaat(invoer, berekenVermogen(invoer));
+    }
+
+    form.addEventListener('input', bereken);
+    form.addEventListener('change', bereken);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    bereken();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-box3bv-calc]').forEach(init);
+</script>
