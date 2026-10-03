@@ -3,7 +3,6 @@ title: Accumulerende of distribuerende ETF's?
 description: Het verschil tussen herbeleggen en uitkeren, en waarom het land waar het fonds gevestigd is fiscaal belangrijker is dan die keuze.
 pubDate: 2026-10-03
 category: Beleggen
-draft: true
 ---
 
 > **Stand van zaken: oktober 2026.** Fiscale regels per fondsland kunnen wijzigen. Dit artikel wordt periodiek herzien.
