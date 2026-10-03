@@ -4,9 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 import mdx from '@astrojs/mdx';
 
-// GitHub Pages: https://tiesvdsar.github.io/financi-n_website/
+// GitHub Pages met eigen domein (ingesteld in de Pages-instellingen van de repo).
 export default defineConfig({
-  site: 'https://tiesvdsar.github.io',
-  base: '/financi-n_website',
+  site: 'https://financien.tiesvandersar.nl',
   integrations: [sitemap(), mdx()],
 });
